@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AoTR 4: A Drone in the Snow | abell56</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --panel: #fffaf3;
+      --panel-strong: #fffdf9;
+      --line: #dccfbe;
+      --line-strong: #c6b69d;
+      --text: #241c16;
+      --muted: #756554;
+      --muted-soft: #968674;
+      --accent: #0f766e;
+      --accent-soft: #d9f3ef;
+      --accent-strong: #115e59;
+      --warm: #c96f3b;
+      --warm-soft: #fde9db;
+      --ok: #1b7f46;
+      --ok-soft: #e2f6e9;
+      --shadow: 0 18px 42px rgba(84, 60, 32, 0.08);
+      --sans: "Manrope", sans-serif;
+      --mono: "Fira Code", monospace;
+      --radius: 20px;
+      --sidebar-width: 280px;
+      --toc-width: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 28%),
+        radial-gradient(circle at top right, rgba(201, 111, 59, 0.09), transparent 26%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; display: block; }
+    code, pre { font-family: var(--mono); }
+
+    .shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--toc-width);
+      gap: 24px;
+      max-width: 1640px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .sidebar,
+    .toc-panel,
+    .post,
+    .topbar {
+      background: rgba(255, 253, 249, 0.78);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(198, 182, 157, 0.58);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      border-radius: 28px;
+      padding: 26px 22px;
+    }
+    .profile {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+    .profile-badge {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--warm));
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 24px rgba(15, 118, 110, 0.18);
+    }
+    .profile h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 6px;
+    }
+    .profile p {
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.75;
+    }
+
+    .sidebar-nav,
+    .meta-list,
+    .toc-list {
+      list-style: none;
+    }
+    .sidebar-nav li + li,
+    .meta-list li + li,
+    .toc-list li + li {
+      margin-top: 8px;
+    }
+    .sidebar-nav a,
+    .meta-list li,
+    .toc-list a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .sidebar-nav a {
+      color: var(--text);
+      font-weight: 600;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .sidebar-nav a:hover {
+      background: var(--accent-soft);
+      text-decoration: none;
+      transform: translateX(2px);
+    }
+    .nav-dot,
+    .meta-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--warm));
+      flex: 0 0 auto;
+    }
+
+    .sidebar-section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .sidebar-title,
+    .toc-title {
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted-soft);
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+    .meta-list li {
+      background: rgba(217, 243, 239, 0.55);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .main {
+      min-width: 0;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 24px;
+      z-index: 40;
+      border-radius: 22px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .crumbs {
+      font-size: 0.92rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .crumbs strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .top-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      padding: 7px 12px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .pill.warm {
+      background: var(--warm-soft);
+      color: var(--warm);
+    }
+
+    .post {
+      border-radius: 30px;
+      padding: 32px;
+      overflow: hidden;
+    }
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 26px;
+      padding: 30px;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(201, 111, 59, 0.12)),
+        var(--panel-strong);
+      border: 1px solid rgba(198, 182, 157, 0.65);
+      margin-bottom: 28px;
+    }
+    .hero-kicker {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent-strong);
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .hero-card h1 {
+      font-size: clamp(2rem, 4vw, 3.1rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+    .hero-card p {
+      font-size: 1rem;
+      line-height: 1.9;
+      color: var(--muted);
+      max-width: 760px;
+    }
+    .post-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .post-meta span {
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(198, 182, 157, 0.65);
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .content {
+      max-width: 820px;
+    }
+    .content > section + section {
+      margin-top: 34px;
+      padding-top: 4px;
+    }
+    .content h2 {
+      font-size: 1.55rem;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    .content h3 {
+      font-size: 1.16rem;
+      margin-bottom: 10px;
+      line-height: 1.45;
+    }
+    .content h4 {
+      font-size: 1rem;
+      color: var(--muted-soft);
+      margin-bottom: 12px;
+    }
+    .content p,
+    .content li {
+      color: var(--muted);
+      line-height: 1.95;
+      font-size: 0.98rem;
+    }
+    .content ul {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+    .content ul li + li {
+      margin-top: 6px;
+    }
+
+    .intro-note,
+    .task-block,
+    .answer-box,
+    .code-shell,
+    .gallery-card {
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+    .intro-note {
+      padding: 18px 20px;
+      margin-top: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.35));
+    }
+
+    .tool-grid,
+    .lab-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .mini-card {
+      border-radius: 18px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.62);
+    }
+    .mini-card strong {
+      display: inline-block;
+      margin-bottom: 6px;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .task-block {
+      padding: 22px;
+      margin-top: 18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.48), rgba(255,255,255,0.28)),
+        var(--panel);
+    }
+    .task-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--warm-soft);
+      color: var(--warm);
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .task-text {
+      margin-bottom: 14px;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .gallery.single {
+      grid-template-columns: 1fr;
+    }
+    .gallery-card {
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 12px 26px rgba(71, 49, 27, 0.06);
+    }
+    .gallery-card img {
+      width: 100%;
+      height: auto;
+    }
+    .gallery-card figcaption {
+      padding: 12px 14px 14px;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+
+    .code-shell {
+      margin-top: 14px;
+      overflow: hidden;
+      background: #2a211a;
+      border-color: #3f3429;
+    }
+    .code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      color: #e6d7c5;
+      background: #211912;
+      font-size: 0.82rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .code-head span:last-child {
+      color: #b9a790;
+    }
+    .code-shell pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.88rem;
+      line-height: 1.75;
+      color: #f5eee7;
+      padding: 16px 18px;
+      overflow-x: auto;
+    }
+    .code-shell code {
+      color: inherit;
+    }
+
+    .answer-box {
+      margin-top: 16px;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, var(--ok-soft), #f7fff9);
+      border-color: #b4dfc1;
+    }
+    .answer-box strong {
+      display: block;
+      color: var(--ok);
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .answer-box p {
+      color: #155f35;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .summary-card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.55);
+    }
+    .summary-card strong {
+      display: block;
+      font-size: 1.7rem;
+      line-height: 1;
+      margin-bottom: 8px;
+      color: var(--accent-strong);
+    }
+    .summary-card span {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .post-footer {
+      margin-top: 34px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .post-footer p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.8;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .footer-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      padding: 9px 12px;
+      background: #fff;
+      color: var(--text);
+      font-weight: 700;
+    }
+    .footer-links a:hover {
+      text-decoration: none;
+      background: var(--accent-soft);
+    }
+
+    .toc-panel {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      border-radius: 26px;
+      padding: 22px 18px;
+    }
+    .toc-list a {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .toc-list a:hover {
+      background: rgba(217, 243, 239, 0.7);
+      color: var(--accent-strong);
+      text-decoration: none;
+    }
+
+    @media (max-width: 1260px) {
+      .shell {
+        grid-template-columns: 250px minmax(0, 1fr);
+      }
+      .toc-panel {
+        display: none;
+      }
+    }
+
+    @media (max-width: 920px) {
+      .shell {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+      .sidebar,
+      .topbar {
+        position: static;
+      }
+      .post {
+        padding: 22px 16px;
+      }
+      .hero-card {
+        padding: 22px 18px;
+      }
+      .tool-grid,
+      .lab-grid,
+      .gallery,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="profile">
+        <div class="profile-badge">A56</div>
+        <h1>abell56 write-up room</h1>
+        <p>Rebuild gaya artikel forensik menjadi layout blog editorial yang rapi, hangat, dan tetap fokus pada bukti.</p>
+      </div>
+
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="#overview"><span class="nav-dot"></span>Overview</a></li>
+          <li><a href="#tools"><span class="nav-dot"></span>Tools</a></li>
+          <li><a href="#files"><span class="nav-dot"></span>Lab Files</a></li>
+          <li><a href="#tasks"><span class="nav-dot"></span>Tasks</a></li>
+          <li><a href="#summary"><span class="nav-dot"></span>Summary</a></li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Snapshot</div>
+        <ul class="meta-list">
+          <li><span class="meta-dot"></span>Challenge: AoTR 4</li>
+          <li><span class="meta-dot"></span>Difficulty: Easy</li>
+          <li><span class="meta-dot"></span>Tasks solved: 13</li>
+          <li><span class="meta-dot"></span>Artifacts: 2 files</li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="crumbs">
+          <span>Home</span>
+          <span>/</span>
+          <span>Write-Up</span>
+          <span>/</span>
+          <strong>A Drone in the Snow</strong>
+        </div>
+        <div class="top-pills">
+          <span class="pill">Drone Forensics</span>
+          <span class="pill warm">Budapest</span>
+        </div>
+      </div>
+
+      <article class="post">
+        <header class="hero-card" id="overview">
+          <div class="hero-kicker">Forensic Post</div>
+          <h1>AoTR 4: A Drone in the Snow</h1>
+          <p>
+            Sebuah drone matte-black ditemukan setengah terkubur salju di Budapest. Dari mission
+            plan dan telemetri yang dipulihkan, kita perlu merekonstruksi rute, menemukan perilaku
+            penting selama misi, dan membuktikan apa yang terjadi tepat sebelum impact.
+          </p>
+          <div class="post-meta">
+            <span>Jan 2026</span>
+            <span>13 tasks</span>
+            <span>qGroundControl + mavlogdump.py</span>
+            <span>Write-up by abell56</span>
+          </div>
+        </header>
+
+        <div class="content">
+          <section>
+            <h2>Scenario</h2>
+            <p>
+              Sebuah disk yang dipulihkan membuka kasus lebih lebar. File di dalamnya bukan teori,
+              tetapi checklist operasi. Beberapa jam kemudian, drone tanpa tanda ditemukan di
+              Budapest dan sangat cocok dengan rencana tadi. Dari titik ini, analisis plan dan log
+              menjadi kunci untuk memahami target, jalur, waktu penerbangan, dan lokasi penting.
+            </p>
+            <div class="intro-note">
+              <p>
+                Layout halaman ini mengambil inspirasi dari gaya blog referensi, tetapi warna,
+                posisi blok, tipografi, dan beberapa pola komponen sudah diubah supaya tidak
+                terasa menyalin mentah.
+              </p>
+            </div>
+          </section>
+
+          <section id="tools">
+            <h2>Tools</h2>
+            <div class="tool-grid">
+              <div class="mini-card">
+                <strong>qGroundControl</strong>
+                <p>Dipakai untuk membuka file <code>.plan</code>, melihat waypoint, dan mengamati rute drone secara visual di peta.</p>
+              </div>
+              <div class="mini-card">
+                <strong>mavlogdump.py</strong>
+                <p>Dipakai untuk parsing <code>log.bin</code> dan mengekstrak event telemetri drone menjadi data yang bisa dibaca.</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="files">
+            <h2>Lab Files</h2>
+            <div class="lab-grid">
+              <div class="mini-card">
+                <strong>AOTR_Winter_Blackout.plan</strong>
+                <p>Berisi konfigurasi misi, waypoint, dan perintah yang direncanakan selama penerbangan.</p>
+              </div>
+              <div class="mini-card">
+                <strong>log.bin</strong>
+                <p>Berisi telemetri aktual yang benar-benar terjadi saat drone terbang dan akhirnya crash.</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="tasks">
+            <h2>Task Walkthrough</h2>
+
+            <div class="task-block" id="task-1">
+              <div class="task-label">Task 1</div>
+              <h3>Berapa total mission items yang didefinisikan dalam flight plan, termasuk Home, Takeoff, dan Land?</h3>
+              <p class="task-text">Buka file plan di qGroundControl lalu hitung seluruh mission items dari panel kanan dan peta utama.</p>
+              <div class="gallery">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 115332.png" alt="Tampilan penuh flight plan pada qGroundControl" loading="lazy" />
+                  <figcaption>Tampilan penuh rute dan daftar mission item memperlihatkan keseluruhan jalur yang harus dihitung.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>49 mission items</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-2">
+              <div class="task-label">Task 2</div>
+              <h3>Berapa jumlah spline waypoint dalam misi?</h3>
+              <p class="task-text">Dari total item yang ada, hitung waypoint bertipe spline dan abaikan Home, Takeoff, Loiter, serta Land.</p>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>46 spline waypoint</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-3">
+              <div class="task-label">Task 3</div>
+              <h3>Landmark atau bangunan mana yang dikelilingi drone selama rute yang direncanakan?</h3>
+              <p class="task-text">Zoom area yang dibentuk waypoint melingkar, lalu cocokkan dengan bentuk landmark pada citra peta.</p>
+              <div class="gallery single">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 115616.png" alt="Rute drone mengitari kawasan Citadella" loading="lazy" />
+                  <figcaption>Bentuk lintasan sangat cocok dengan kompleks Citadella di Bukit Gellert.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>Citadella</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-4">
+              <div class="task-label">Task 4</div>
+              <h3>Pada mission item ke berapa drone melakukan planned hold atau loiter?</h3>
+              <p class="task-text">Cari waypoint yang memiliki properti hold dan durasi tunggu di panel detail qGroundControl.</p>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>Mission item 18</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-5">
+              <div class="task-label">Task 5</div>
+              <h3>Berapa lama waktu hold yang direncanakan pada mission item tersebut?</h3>
+              <p class="task-text">Nilai hold bisa dibaca langsung dari panel properti waypoint yang sama.</p>
+              <div class="gallery single">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 115624.png" alt="Panel waypoint dengan properti hold 30 detik" loading="lazy" />
+                  <figcaption>Panel properti waypoint menampilkan nilai <em>Hold 30 secs</em>, sehingga durasi loiter bisa dibaca langsung.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>30 detik</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-6">
+              <div class="task-label">Task 6</div>
+              <h3>Jembatan mana yang dilalui drone saat menyeberangi Sungai Danube?</h3>
+              <p class="task-text">Ikuti jalur waypoint ketika drone menyeberang sungai dan cocokkan dengan nama jembatan pada peta.</p>
+              <div class="gallery single">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 115710.png" alt="Lintasan drone di atas Elisabeth Bridge" loading="lazy" />
+                  <figcaption>Waypoint yang menyeberangi Danube terlihat berada tepat pada jalur Elisabeth Bridge.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>Elisabeth Bridge</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-7">
+              <div class="task-label">Task 7</div>
+              <h3>Berapa total waktu penerbangan dari takeoff hingga crash?</h3>
+              <p class="task-text">Ambil timestamp takeoff dan timestamp crash dari log MSG, lalu hitung selisihnya dalam detik.</p>
+              <div class="code-shell">
+                <div class="code-head">
+                  <span>shell</span>
+                  <span>mavlogdump.py --type MSG log.bin</span>
+                </div>
+                <pre><code>2026-01-05 22:16:32.70: MSG {TimeUS : 48893768, Message : Mission: 1 Takeoff}
+...
+2026-01-05 22:27:11.62: MSG {TimeUS : 687813098, Message : SIM Hit ground at 12.93254 m/s}</code></pre>
+              </div>
+              <div class="gallery">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 121037.png" alt="Log takeoff drone" loading="lazy" />
+                  <figcaption>Timestamp awal penerbangan diambil dari event takeoff.</figcaption>
+                </figure>
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 121051.png" alt="Log crash drone" loading="lazy" />
+                  <figcaption>Timestamp akhir penerbangan diambil dari event drone menghantam tanah.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>00:10:38.919</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-8">
+              <div class="task-label">Task 8</div>
+              <h3>Berapa timestamp log tepat saat crash event (TimeUS)?</h3>
+              <p class="task-text">Baris log yang berisi pesan <code>SIM Hit ground</code> menunjukkan timestamp crash secara langsung.</p>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>687813098</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-9">
+              <div class="task-label">Task 9</div>
+              <h3>Apa koordinat tempat drone crash (lat, lon)?</h3>
+              <div class="code-shell">
+                <div class="code-head">
+                  <span>shell</span>
+                  <span>grep record GPS sebelum crash</span>
+                </div>
+                <pre><code>$ python3 mavlogdump.py log.bin | grep -B30 687813098 | grep Lat
+GPS {TimeUS : 687783943, ... Lat : 47.4903055, Lng : 19.0460476, Alt : 121.76, Spd : 3.207, ...}</code></pre>
+              </div>
+              <div class="gallery single">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 122003.png" alt="Output koordinat crash drone" loading="lazy" />
+                  <figcaption>Record GPS terakhir sebelum impact menjadi sumber koordinat lokasi crash.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>47.4903055, 19.0460476</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-10">
+              <div class="task-label">Task 10</div>
+              <h3>Berapa kecepatan ground impact yang dilaporkan saat crash?</h3>
+              <p class="task-text">Nilai kecepatan benturan sudah tertulis langsung pada pesan crash di log.</p>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>12.93254 m/s</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-11">
+              <div class="task-label">Task 11</div>
+              <h3>Berapa altitude GPS maksimum yang dicapai selama penerbangan?</h3>
+              <div class="gallery single">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 122044.png" alt="Output altitude maksimum" loading="lazy" />
+                  <figcaption>Hasil sortir record GPS menunjukkan altitude maksimum yang dicapai drone.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>377.07 meter</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-12">
+              <div class="task-label">Task 12</div>
+              <h3>Berapa ground speed GPS tercepat yang terekam?</h3>
+              <div class="gallery single">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 122109.png" alt="Output speed maksimum" loading="lazy" />
+                  <figcaption>Nilai tertinggi pada output speed dibulatkan menjadi 10.24 meter per detik.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>10.24 m/s</p>
+              </div>
+            </div>
+
+            <div class="task-block" id="task-13">
+              <div class="task-label">Task 13</div>
+              <h3>Koordinat takeoff drone yang dapat dijadikan lokasi penggerebekan polisi?</h3>
+              <div class="gallery single">
+                <figure class="gallery-card">
+                  <img src="foto/Screenshot 2026-04-18 122134.png" alt="Output koordinat takeoff" loading="lazy" />
+                  <figcaption>Record GPS pertama menunjukkan titik awal drone sebelum mulai terbang.</figcaption>
+                </figure>
+              </div>
+              <div class="answer-box">
+                <strong>Answer</strong>
+                <p>47.4819399, 19.0191600</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="summary">
+            <h2>Summary</h2>
+            <div class="summary-grid">
+              <div class="summary-card">
+                <strong>13</strong>
+                <span>task berhasil dijawab dari mission plan dan log aktual.</span>
+              </div>
+              <div class="summary-card">
+                <strong>10:38</strong>
+                <span>durasi terbang dari takeoff hingga crash.</span>
+              </div>
+              <div class="summary-card">
+                <strong>377m</strong>
+                <span>altitude GPS maksimum yang sempat dicapai.</span>
+              </div>
+              <div class="summary-card">
+                <strong>12.9</strong>
+                <span>kecepatan benturan saat drone menghantam tanah.</span>
+              </div>
+              <div class="summary-card">
+                <strong>49</strong>
+                <span>jumlah total mission item yang terlihat pada plan.</span>
+              </div>
+              <div class="summary-card">
+                <strong>46</strong>
+                <span>jumlah spline waypoint dalam misi drone.</span>
+              </div>
+            </div>
+          </section>
+
+          <footer class="post-footer">
+            <p>
+              Halaman ini disesuaikan untuk profil GitHub <a href="https://github.com/abell56" target="_blank" rel="noopener">abell56</a>
+              dengan layout editorial bergaya blog forensik dan warna yang sudah diubah dari referensi.
+            </p>
+            <div class="footer-links">
+              <a href="https://github.com/abell56" target="_blank" rel="noopener">GitHub / abell56</a>
+              <a href="https://github.com/hackthebox/advent-of-the-relics" target="_blank" rel="noopener">Challenge Source</a>
+            </div>
+          </footer>
+        </div>
+      </article>
+    </main>
+
+    <aside class="toc-panel">
+      <div class="toc-title">On This Page</div>
+      <ul class="toc-list">
+        <li><a href="#overview">Hero Overview</a></li>
+        <li><a href="#tools">Tools</a></li>
+        <li><a href="#files">Lab Files</a></li>
+        <li><a href="#task-1">Task 1</a></li>
+        <li><a href="#task-3">Task 3</a></li>
+        <li><a href="#task-6">Task 6</a></li>
+        <li><a href="#task-7">Task 7</a></li>
+        <li><a href="#task-9">Task 9</a></li>
+        <li><a href="#summary">Summary</a></li>
+      </ul>
+    </aside>
+  </div>
+</body>
+</html>
